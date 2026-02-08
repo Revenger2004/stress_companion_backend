@@ -1,13 +1,18 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Dict, Any
 
 class OpticalAnalysisResponse(BaseModel):
     """
-    Standard response format for the Optical (RGB) analysis pipeline.
+    Standardized lightweight response for Optical (RGB) analysis.
+    
+    Optimized for bandwidth:
+    - Returns only the raw probability (0.0 - 1.0).
+    - Frontend calculates the Score (0-100).
     """
     status: str
-    stress_score: int         # 0-100 scale
-    is_face_detected: bool
-    # We add 'metadata' for future expansion (e.g. blink rate, emotion label)
-    # without breaking the frontend contract.
-    metadata: Optional[dict] = None
+    
+    # The raw output from the regression model (0.0 to 1.0)
+    stress_probability: float  
+    
+    # Flexible container for debugging info (e.g., model version, processing time)
+    metadata: Optional[Dict[str, Any]] = None
