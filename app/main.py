@@ -19,7 +19,16 @@ from app.core.handlers import (
     general_error_handler,
 )
 
-app = FastAPI(title=settings.PROJECT_NAME)
+# --- APP INITIALIZATION ---
+# Disable Swagger UI docs in production so the public can't inspect your API
+is_prod = getattr(settings, "ENVIRONMENT", "development").lower() == "production"
+
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    docs_url=None if is_prod else "/docs",
+    redoc_url=None if is_prod else "/redoc",
+    openapi_url=None if is_prod else "/openapi.json"
+)
 
 # --- EXCEPTION HANDLERS ---
 app.add_exception_handler(GeminiAuthenticationError, auth_error_handler)
@@ -28,9 +37,11 @@ app.add_exception_handler(GeminiServerError, upstream_error_handler)
 app.add_exception_handler(GeminiServiceError, general_error_handler)
 
 # --- MIDDLEWARE ---
+# Use specific origins from your settings instead of "*"
+# In your .env, this would look like: ALLOWED_ORIGINS=["http://localhost:5173", "https://your-react-app.vercel.app"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # tighten later
+    allow_origins=settings.ALLOWED_ORIGINS if hasattr(settings, "ALLOWED_ORIGINS") else ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -54,6 +65,6 @@ async def root():
     return {
         "service": settings.PROJECT_NAME,
         "status": "running",
-        "docs": "/docs",
+        "docs": "/docs" if not is_prod else "disabled",
         "health": "/health"
     }

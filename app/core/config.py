@@ -1,9 +1,16 @@
-from pydantic_settings import BaseSettings
-from pydantic import Field
+from pydantic import Field, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
+    # --- AI & APP SETTINGS ---
     GEMINI_API_KEY: str = Field(..., description="Gemini API key")
     PROJECT_NAME: str = "FastAPI Backend"
+    
+    # --- DEPLOYMENT & CORS SETTINGS ---
+    ENVIRONMENT: str = "development"
+    
+    ALLOWED_ORIGINS: str | list[str] = ["http://localhost:5173", "http://localhost:3000"]
+
     SYSTEM_INSTRUCTION: str = """
 You are a calm and friendly chat companion.
 Your job is to talk like a normal human, not like a therapist, doctor, or questionnaire.
@@ -49,7 +56,17 @@ IMPORTANT RULES:
 The conversation should feel like talking to a kind, patient human.
 """
 
-    class Config:
-        env_file = ".env"
+    # Now this validator will actually run and turn your string into a clean list!
+    @field_validator("ALLOWED_ORIGINS", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v):
+        if isinstance(v, str):
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        return v
+
+    model_config = SettingsConfigDict(
+        env_file=".env", 
+        extra="ignore"
+    )
 
 settings = Settings()
