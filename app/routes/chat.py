@@ -9,9 +9,9 @@ router = APIRouter(prefix="/chat", tags=["Chat"])
 
 # ---------------------------------------------------------------------------
 # Original Route: Uses Gemini API
-# Endpoint: POST /chat/
+# Endpoint: POST /chat/gemini
 # ---------------------------------------------------------------------------
-@router.post("/", response_model=ChatResponse)
+@router.post("/gemini", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest):
     reply = await gemini_service.get_chat_response(
         session_id=request.session_id,
