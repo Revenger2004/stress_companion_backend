@@ -1,7 +1,15 @@
 import asyncio
+import threading
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer, AutoModelForCausalLM, StoppingCriteria, StoppingCriteriaList
 from app.core.config import settings
+
+class CancelEventStoppingCriteria(StoppingCriteria):
+    def __init__(self, stop_event: threading.Event):
+        self.stop_event = stop_event
+
+    def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs):
+        return self.stop_event.is_set()
 
 LOCAL_LLM_MODEL_NAME = "Qwen/Qwen2.5-0.5B-Instruct"
 LOCAL_LLM_MAX_NEW_TOKENS = 512
@@ -48,7 +56,7 @@ class LocalLLMService:
             ]
         return self._active_chats[session_id]
 
-    def _generate_blocking(self, session_id: str, user_message: str) -> str:
+    def _generate_blocking(self, session_id: str, user_message: str, stop_event: threading.Event) -> str:
         """The core synchronous text generation logic."""
         if not self._ensure_model():
             raise RuntimeError("Local LLM model not loaded or unavailable.")
@@ -62,6 +70,8 @@ class LocalLLMService:
             history, tokenize=False, add_generation_prompt=True
         )
         inputs = self.tokenizer(text_input, return_tensors="pt")
+        
+        stopping_criteria = StoppingCriteriaList([CancelEventStoppingCriteria(stop_event)])
 
         # 3. Generate the response
         with torch.no_grad():
@@ -73,25 +83,41 @@ class LocalLLMService:
                 top_p=0.9,
                 repetition_penalty=1.1,
                 pad_token_id=self.tokenizer.eos_token_id,
+                stopping_criteria=stopping_criteria,
             )
 
         # 4. Decode only the newly generated tokens
         generated_ids = output[0][inputs["input_ids"].shape[1]:]
         response_text = self.tokenizer.decode(generated_ids, skip_special_tokens=True).strip()
 
-        # 5. Append the assistant's response to the history for future context
+        # 5. Check if we were cancelled mid-generation
+        if stop_event.is_set():
+            # Rollback history: Remove the user message so session state is preserved cleanly
+            history.pop()
+            return ""
+
+        # 6. Append the assistant's response to the history for future context
         history.append({"role": "assistant", "content": response_text})
 
         return response_text
 
     async def get_chat_response(self, session_id: str, user_message: str) -> str:
         """Async wrapper to prevent blocking the FastAPI event loop."""
+        stop_event = threading.Event()
         try:
-            return await asyncio.to_thread(
-                self._generate_blocking,
-                session_id,
-                user_message,
+            task = asyncio.create_task(
+                asyncio.to_thread(
+                    self._generate_blocking,
+                    session_id,
+                    user_message,
+                    stop_event
+                )
             )
+            return await task
+        except asyncio.CancelledError:
+            print(f"[LLM-LOCAL] Client disconnected. Aborting generation for session {session_id}.")
+            stop_event.set()
+            raise
         except Exception as e:
             # You can map this to your custom exceptions (e.g., LocalLLMServiceError) if you have them
             raise Exception(f"Local LLM error: {str(e)}")

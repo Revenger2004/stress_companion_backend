@@ -21,9 +21,9 @@ class GeminiService:
                 f"Failed to initialize Gemini client: {str(e)}"
             )
 
-    def _get_or_create_chat(self, session_id: str):
+    async def _get_or_create_chat(self, session_id: str):
         if session_id not in self._active_chats:
-            self._active_chats[session_id] = self.client.chats.create(
+            self._active_chats[session_id] = await self.client.aio.chats.create(
                 model=self.model_name,
                 config=types.GenerateContentConfig(
                     system_instruction=settings.SYSTEM_INSTRUCTION
@@ -31,18 +31,15 @@ class GeminiService:
             )
         return self._active_chats[session_id]
 
-    def _send_message_blocking(self, session_id: str, user_message: str) -> str:
-        chat = self._get_or_create_chat(session_id)
-        response = chat.send_message(user_message)
-        return response.text
-
     async def get_chat_response(self, session_id: str, user_message: str) -> str:
         try:
-            return await asyncio.to_thread(
-                self._send_message_blocking,
-                session_id,
-                user_message,
-            )
+            chat = await self._get_or_create_chat(session_id)
+            response = await chat.send_message(user_message)
+            return response.text
+            
+        except asyncio.CancelledError:
+            print(f"[LLM-GEMINI] Client disconnected. Aborting generation for session {session_id}.")
+            raise
 
         except Exception as e:
             msg = str(e).lower()
