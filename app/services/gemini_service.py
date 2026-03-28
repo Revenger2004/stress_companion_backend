@@ -23,7 +23,7 @@ class GeminiService:
 
     async def _get_or_create_chat(self, session_id: str):
         if session_id not in self._active_chats:
-            self._active_chats[session_id] = await self.client.aio.chats.create(
+            self._active_chats[session_id] = self.client.aio.chats.create(
                 model=self.model_name,
                 config=types.GenerateContentConfig(
                     system_instruction=settings.SYSTEM_INSTRUCTION
