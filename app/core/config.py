@@ -2,6 +2,14 @@ from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
+
+    # Default to localhost for local dev; Docker or deployment can override this.
+    # Defaults are dev placeholders only; set real values in backend `.env` (not committed).
+    DATABASE_URL: str = "postgresql+psycopg://postgres:postgres@localhost:5432/STRESS_COMPANION_DATABASE"
+    SECRET_KEY: str = "change-me-set-in-backend-env"
+    # THIS IS THE MAGIC LINE that tells it to load the .env file
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+
     # --- AI & APP SETTINGS ---
     GEMINI_API_KEY: str = Field(..., description="Gemini API key")
     PROJECT_NAME: str = "FastAPI Backend"
