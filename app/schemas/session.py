@@ -16,12 +16,7 @@ class SessionUpdateRequest(BaseModel):
     status: str  # e.g. 'completed'
 
 # --- Frame Schemas ---
-class FrameCreateRequest(BaseModel):
-    session_id: uuid.UUID
-    camera_type: str  # 'optical' or 'thermal'
-    frame_number: int
-    image_path: str
-    stress_probability: float
+# (Frames are now processed exclusively via WebSockets; no REST payload needed)
 
 # --- Message Schemas ---
 class MessageCreateRequest(BaseModel):

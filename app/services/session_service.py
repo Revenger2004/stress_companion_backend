@@ -6,7 +6,7 @@ from app.db_models.domain import (
     Session as SessionModel, Frame, Prediction,
     SessionPrediction, Message
 )
-from app.schemas.session import FrameCreateRequest, MessageCreateRequest
+from app.schemas.session import MessageCreateRequest
 
 def get_user_session_or_404(db: DBSession, session_id: str, person_id: str) -> SessionModel:
     """Ensures the session exists AND belongs to the current user."""
@@ -31,28 +31,7 @@ def update_session_status(db: DBSession, session_id: str, person_id: str, new_st
     db.commit()
     return {"status": "updated"}
 
-def save_frame_and_prediction(db: DBSession, session_id: str, person_id: str, request: FrameCreateRequest):
-    get_user_session_or_404(db, session_id, person_id)
 
-    frame = Frame(
-        session_id=session_id,
-        camera_type=request.camera_type,
-        frame_number=request.frame_number,
-        image_path=request.image_path,
-        timestamp=datetime.utcnow(),
-    )
-    db.add(frame)
-    db.flush()  # Get frame_id before commit
-
-    prediction = Prediction(
-        frame_id=frame.frame_id,
-        model_type=request.camera_type,
-        stress_probability=request.stress_probability,
-    )
-    db.add(prediction)
-    db.commit()
-
-    return {"frame_id": frame.frame_id, "prediction_id": prediction.prediction_id}
 
 def calculate_session_summary(db: DBSession, session_id: str, person_id: str):
     get_user_session_or_404(db, session_id, person_id)

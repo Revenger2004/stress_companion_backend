@@ -1,6 +1,5 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
-from app.services.thermal_service import thermal_analyzer
-from app.services.storage_service import save_frame_and_prediction
+from app.services.frame_processing_service import FrameProcessingService
 from app.db.session import SessionLocal
 
 router = APIRouter()
@@ -17,28 +16,16 @@ async def thermal_websocket_endpoint(
     await websocket.accept()
     
     db = SessionLocal()
-    frame_count = 0
+    processor = FrameProcessingService(session_id=session_id, camera_type="thermal", db=db)
     try:
         while True:
             # 1. Receive Binary Blob
             data = await websocket.receive_bytes()
 
-            # 2. Process via Service Layer
-            result_schema = thermal_analyzer.process_frame(data)
+            # 2. Process and Save via Service Layer
+            result_schema = processor.process_and_save_frame(data)
 
-            # 3. Save to DB/Disk if Session Active
-            if session_id:
-                frame_count += 1
-                save_frame_and_prediction(
-                    db=db,
-                    session_id=session_id,
-                    camera_type="thermal",
-                    frame_count=frame_count,
-                    data=data,
-                    stress_probability=result_schema.stress_probability
-                )
-
-            # 4. Return result to frontend
+            # 3. Return result to frontend
             await websocket.send_json(result_schema.model_dump())
 
     except WebSocketDisconnect:

@@ -5,7 +5,7 @@ from app.db.session import get_db
 from app.db_models.domain import Person
 from app.schemas.session import (
     SessionCreateResponse, SessionUpdateRequest,
-    FrameCreateRequest, MessageCreateRequest, MessageResponse
+    MessageCreateRequest, MessageResponse
 )
 from app.core.security import get_current_user
 from app.services import session_service  # Import the new service
@@ -26,16 +26,6 @@ def update_session(
     db: DBSession = Depends(get_db)
 ):
     return session_service.update_session_status(db, session_id, current_user.person_id, request.status)
-
-
-@router.post("/{session_id}/frames")
-def save_frame(
-    session_id: str,
-    request: FrameCreateRequest,
-    current_user: Person = Depends(get_current_user),
-    db: DBSession = Depends(get_db)
-):
-    return session_service.save_frame_and_prediction(db, session_id, current_user.person_id, request)
 
 
 @router.post("/{session_id}/summary")

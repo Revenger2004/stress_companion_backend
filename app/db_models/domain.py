@@ -29,7 +29,7 @@ class Person(Base):
     stress_sources = Column(Text, nullable=True)       # comma-separated or free text
 
     # Psychology (Big Five renamed)
-    curious = Column(Float, nullable=True)       # Openness
+    openness = Column(Float, nullable=True)       # Openness
     disciplined = Column(Float, nullable=True)   # Conscientiousness
     outgoing = Column(Float, nullable=True)      # Extraversion
     cooperative = Column(Float, nullable=True)   # Agreeableness

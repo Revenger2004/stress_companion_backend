@@ -21,6 +21,11 @@ from app.core.handlers import (
     general_error_handler,
 )
 
+from fastapi.staticfiles import StaticFiles
+import os
+
+os.makedirs("uploads", exist_ok=True)
+
 # --- APP INITIALIZATION ---
 # Disable Swagger UI docs in production so the public can't inspect your API
 is_prod = getattr(settings, "ENVIRONMENT", "development").lower() == "production"
@@ -56,6 +61,8 @@ app.include_router(sessions.router, prefix="/api/v1")
 app.include_router(chat.router, prefix="/api/v1")
 app.include_router(optical.router, prefix="/api/v1", tags=["Optical Sensor"])
 app.include_router(thermal.router, prefix="/api/v1", tags=["Thermal Sensor"])
+
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 
 @app.get("/health", tags=["Health"])
