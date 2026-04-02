@@ -12,6 +12,16 @@ class RegisterRequest(BaseModel):
     country: Optional[str] = None
     education: Optional[str] = None
     currentrole: Optional[str] = None
+    # Lifestyle
+    physical_activity: Optional[str] = None    # e.g. "low", "moderate", "high"
+    daily_screen_time: Optional[float] = None  # hours per day
+    stress_sources: Optional[str] = None
+    # Psychology traits (Big Five renamed)
+    openness: Optional[float] = None       # Openness
+    disciplined: Optional[float] = None   # Conscientiousness
+    outgoing: Optional[float] = None      # Extraversion
+    cooperative: Optional[float] = None   # Agreeableness
+    anxious: Optional[float] = None       # Neuroticism
 
 class LoginRequest(BaseModel):
     email: str
@@ -33,6 +43,17 @@ class PersonResponse(BaseModel):
     height_cm: Optional[float] = None
     weight_kg: Optional[float] = None
     medical_history: Optional[str] = None
+    profile_image_path: Optional[str] = None
+    # Lifestyle
+    physical_activity: Optional[str] = None
+    daily_screen_time: Optional[float] = None
+    stress_sources: Optional[str] = None
+    # Psychology traits
+    openness: Optional[float] = None
+    disciplined: Optional[float] = None
+    outgoing: Optional[float] = None
+    cooperative: Optional[float] = None
+    anxious: Optional[float] = None
 
     class Config:
         from_attributes = True
@@ -47,3 +68,13 @@ class ProfileUpdateRequest(BaseModel):
     height_cm: Optional[float] = None
     weight_kg: Optional[float] = None
     medical_history: Optional[str] = None
+    # Lifestyle
+    physical_activity: Optional[str] = None
+    daily_screen_time: Optional[float] = None
+    stress_sources: Optional[str] = None
+    # Psychology traits
+    openness: Optional[float] = None
+    disciplined: Optional[float] = None
+    outgoing: Optional[float] = None
+    cooperative: Optional[float] = None
+    anxious: Optional[float] = None

@@ -21,6 +21,20 @@ class Person(Base):
     height_cm = Column(Float, nullable=True)
     weight_kg = Column(Float, nullable=True)
     medical_history = Column(Text, nullable=True)
+    profile_image_path = Column(Text, nullable=True)
+
+    # Lifestyle fields
+    physical_activity = Column(Text, nullable=True)    # e.g. "low", "moderate", "high"
+    daily_screen_time = Column(Float, nullable=True)   # hours per day
+    stress_sources = Column(Text, nullable=True)       # comma-separated or free text
+
+    # Psychology (Big Five renamed)
+    curious = Column(Float, nullable=True)       # Openness
+    disciplined = Column(Float, nullable=True)   # Conscientiousness
+    outgoing = Column(Float, nullable=True)      # Extraversion
+    cooperative = Column(Float, nullable=True)   # Agreeableness
+    anxious = Column(Float, nullable=True)       # Neuroticism
+
     created_at = Column(DateTime, default=datetime.utcnow)
 
     sessions = relationship("Session", back_populates="person", cascade="all, delete-orphan")
