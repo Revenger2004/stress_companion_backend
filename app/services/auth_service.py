@@ -18,7 +18,15 @@ def register_new_user(db: Session, request: RegisterRequest) -> str:
         gender=request.gender,
         country=request.country,
         education=request.education,
-        currentrole=request.currentrole
+        currentrole=request.currentrole,
+        physical_activity=request.physical_activity,
+        daily_screen_time=request.daily_screen_time,
+        stress_sources=request.stress_sources,
+        openness=request.openness,
+        disciplined=request.disciplined,
+        outgoing=request.outgoing,
+        cooperative=request.cooperative,
+        anxious=request.anxious,
     )
     db.add(person)
     db.commit()
